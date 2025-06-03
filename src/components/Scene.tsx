@@ -7,20 +7,6 @@ import * as THREE from 'three';
 const VertexCoordinates = ({ position, onPositionChange }) => {
   if (!position) return null;
 
-  const handleChange = (axis: 'x' | 'y' | 'z', value: string) => {
-    const newPosition = position.clone();
-    newPosition[axis] = parseFloat(value) || 0;
-    onPositionChange(newPosition);
-  };
-
-  const handleWheel = (e: React.WheelEvent, axis: 'x' | 'y' | 'z') => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    const newPosition = position.clone();
-    newPosition[axis] = parseFloat((newPosition[axis] + delta).toFixed(3));
-    onPositionChange(newPosition);
-  };
-
   return (
     <div className="absolute right-4 bottom-4 bg-black/75 text-white p-4 rounded-lg font-mono">
       <div className="space-y-2">
@@ -29,11 +15,14 @@ const VertexCoordinates = ({ position, onPositionChange }) => {
             <label className="w-8">{axis.toUpperCase()}:</label>
             <input
               type="number"
-              value={position[axis].toFixed(3)}
-              onChange={(e) => handleChange(axis, e.target.value)}
-              onWheel={(e) => handleWheel(e, axis)}
+              value={position[axis]}
+              onChange={(e) => {
+                const newPosition = position.clone();
+                newPosition[axis] = parseFloat(e.target.value);
+                onPositionChange(newPosition);
+              }}
               className="bg-gray-800 px-2 py-1 rounded w-24 text-right hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              step="0.1"
+              step="any"
             />
           </div>
         ))}
@@ -143,11 +132,9 @@ const EdgeLines = ({ geometry, object }) => {
   const edges = [];
   const worldMatrix = object.matrixWorld;
 
-  // Get all edges including vertical ones
   const indices = geometry.index ? Array.from(geometry.index.array) : null;
   
   if (indices) {
-    // For indexed geometry
     for (let i = 0; i < indices.length; i += 3) {
       const addEdge = (a: number, b: number) => {
         const v1 = new THREE.Vector3(
@@ -171,13 +158,11 @@ const EdgeLines = ({ geometry, object }) => {
         });
       };
 
-      // Add all three edges of the triangle
       addEdge(i, i + 1);
       addEdge(i + 1, i + 2);
       addEdge(i + 2, i);
     }
   } else {
-    // For non-indexed geometry
     for (let i = 0; i < positions.count; i += 3) {
       const addEdge = (a: number, b: number) => {
         const v1 = new THREE.Vector3(
@@ -201,7 +186,6 @@ const EdgeLines = ({ geometry, object }) => {
         });
       };
 
-      // Add all three edges of the triangle
       addEdge(i, i + 1);
       addEdge(i + 1, i + 2);
       addEdge(i + 2, i);
