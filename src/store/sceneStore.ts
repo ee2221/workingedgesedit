@@ -48,6 +48,7 @@ interface SceneState {
   endEdgeDrag: () => void;
   updateCylinderVertices: (vertexCount: number) => void;
   updateSphereVertices: (vertexCount: number) => void;
+  deleteVertex: (index: number) => void;
 }
 
 export const useSceneStore = create<SceneState>((set, get) => ({
@@ -211,7 +212,6 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       const connectedVertices = new Set<number>();
       const edges: number[][] = [];
 
-      // Find all connected vertices
       const findConnectedVertices = (startIndex: number) => {
         if (connectedVertices.has(startIndex)) return;
         connectedVertices.add(startIndex);
@@ -262,7 +262,6 @@ export const useSceneStore = create<SceneState>((set, get) => ({
       const positions = geometry.attributes.position;
       const offset = position.clone().sub(state.draggedEdge.initialPositions[0]);
 
-      // Move all connected vertices together
       state.draggedEdge.connectedVertices.forEach(vertexIndex => {
         const currentPos = new THREE.Vector3(
           positions.getX(vertexIndex),
@@ -341,6 +340,41 @@ export const useSceneStore = create<SceneState>((set, get) => ({
 
       return {
         ...state,
+        selectedElements: {
+          vertices: [],
+          edges: [],
+          faces: []
+        }
+      };
+    }),
+
+  deleteVertex: (index) =>
+    set((state) => {
+      if (!(state.selectedObject instanceof THREE.Mesh)) return state;
+
+      const geometry = state.selectedObject.geometry;
+      const positions = geometry.attributes.position;
+      const indices = geometry.index ? Array.from(geometry.index.array) : null;
+
+      // Create new arrays without the selected vertex
+      const newPositions = new Float32Array((positions.count - 1) * 3);
+      let newIndex = 0;
+
+      for (let i = 0; i < positions.count; i++) {
+        if (i !== index) {
+          newPositions[newIndex * 3] = positions.getX(i);
+          newPositions[newIndex * 3 + 1] = positions.getY(i);
+          newPositions[newIndex * 3 + 2] = positions.getZ(i);
+          newIndex++;
+        }
+      }
+
+      // Update geometry
+      geometry.setAttribute('position', new THREE.BufferAttribute(newPositions, 3));
+      geometry.computeVertexNormals();
+      geometry.computeBoundingSphere();
+
+      return {
         selectedElements: {
           vertices: [],
           edges: [],
