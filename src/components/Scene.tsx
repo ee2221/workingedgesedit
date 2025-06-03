@@ -15,11 +15,10 @@ const VertexCoordinates = ({ position, onPositionChange }) => {
             <label className="w-8">{axis.toUpperCase()}:</label>
             <input
               type="number"
-              value={position[axis] || ''}
+              value={position[axis]}
               onChange={(e) => {
                 const newPosition = position.clone();
-                const value = e.target.value;
-                newPosition[axis] = value === '' ? 0 : parseFloat(value);
+                newPosition[axis] = parseFloat(e.target.value);
                 onPositionChange(newPosition);
               }}
               className="bg-gray-800 px-2 py-1 rounded w-24 text-right hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
