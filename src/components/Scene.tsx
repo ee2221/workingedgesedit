@@ -3,9 +3,8 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, TransformControls, Grid } from '@react-three/drei';
 import { useSceneStore } from '../store/sceneStore';
 import * as THREE from 'three';
-import { Trash2 } from 'lucide-react';
 
-const VertexCoordinates = ({ position, onPositionChange, onDelete }) => {
+const VertexCoordinates = ({ position, onPositionChange }) => {
   if (!position) return null;
 
   return (
@@ -19,7 +18,7 @@ const VertexCoordinates = ({ position, onPositionChange, onDelete }) => {
               value={position[axis]}
               onChange={(e) => {
                 const newPosition = position.clone();
-                newPosition[axis] = parseFloat(e.target.value) || 0;
+                newPosition[axis] = parseFloat(e.target.value);
                 onPositionChange(newPosition);
               }}
               className="bg-gray-800 px-2 py-1 rounded w-24 text-right hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -27,13 +26,6 @@ const VertexCoordinates = ({ position, onPositionChange, onDelete }) => {
             />
           </div>
         ))}
-        <button
-          onClick={onDelete}
-          className="mt-2 w-full flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Delete Vertex</span>
-        </button>
       </div>
     </div>
   );
@@ -95,7 +87,7 @@ const VertexCountSelector = () => {
 };
 
 const VertexPoints = ({ geometry, object }) => {
-  const { editMode, selectedElements, startVertexDrag, deleteVertex } = useSceneStore();
+  const { editMode, selectedElements, startVertexDrag } = useSceneStore();
   const positions = geometry.attributes.position;
   const vertices = [];
   const worldMatrix = object.matrixWorld;
@@ -328,7 +320,7 @@ const EditModeOverlay = () => {
 };
 
 const Scene: React.FC = () => {
-  const { objects, selectedObject, setSelectedObject, transformMode, editMode, draggedVertex, selectedElements, updateVertexDrag, deleteVertex } = useSceneStore();
+  const { objects, selectedObject, setSelectedObject, transformMode, editMode, draggedVertex, selectedElements, updateVertexDrag } = useSceneStore();
   const [selectedPosition, setSelectedPosition] = useState<THREE.Vector3 | null>(null);
 
   useEffect(() => {
@@ -357,12 +349,6 @@ const Scene: React.FC = () => {
   const handlePositionChange = (newPosition: THREE.Vector3) => {
     if (selectedObject instanceof THREE.Mesh) {
       updateVertexDrag(newPosition);
-    }
-  };
-
-  const handleDeleteVertex = () => {
-    if (selectedObject instanceof THREE.Mesh && selectedElements.vertices.length > 0) {
-      deleteVertex(selectedElements.vertices[0]);
     }
   };
 
@@ -410,7 +396,6 @@ const Scene: React.FC = () => {
         <VertexCoordinates 
           position={selectedPosition}
           onPositionChange={handlePositionChange}
-          onDelete={handleDeleteVertex}
         />
       )}
       {editMode === 'vertex' && selectedObject && !(selectedObject.geometry instanceof THREE.ConeGeometry) && (
